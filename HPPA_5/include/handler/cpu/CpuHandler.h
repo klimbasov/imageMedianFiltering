@@ -1,0 +1,9 @@
+#pragma once
+#include <entity/image.h>
+
+class CpuHandler
+{
+public:
+	static void handle(const image&, image&, double&);
+};
+
