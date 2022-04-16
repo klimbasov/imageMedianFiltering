@@ -1,6 +1,6 @@
 #include "CpuHandler.h"
 #include <algorithm>
-#include <timer/Timer.h>
+#include <util/timer/Timer.h>
 
 void CpuHandler::handle(const image& src, image & dst, double& time)
 {
@@ -25,3 +25,5 @@ void CpuHandler::handle(const image& src, image & dst, double& time)
 	}
 	time = timer.check();
 }
+
+//ffmpeg - lib

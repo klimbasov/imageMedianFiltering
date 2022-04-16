@@ -1,5 +1,5 @@
 #include "pgmLoader.h"
-#include <loader/util/skeeper/Skepper.h>
+#include <util/skeeper/Skepper.h>
 
 void pgmLoader::upload(image& img, const char* filename)
 {
