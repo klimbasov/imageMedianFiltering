@@ -13,3 +13,9 @@ void c_cudaHandler_opt(
 	image& dst,
 	double& time
 );
+
+void cudaHanglerMultipleData(
+	const image* src,
+	image* dst,
+	const unsigned int length
+);

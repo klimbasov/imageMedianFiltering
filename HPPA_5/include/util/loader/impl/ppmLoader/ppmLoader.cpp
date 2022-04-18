@@ -4,7 +4,9 @@
 void ppmLoader::upload(image& img, const char* filename)
 {
     std::ofstream stream(filename, std::ios::out | std::ios::binary | std::ios::trunc);
-
+    if (!stream.is_open()) {
+        throw std::exception("file was not open");
+    }
     stream << img.magic << (char)0xA << img.width << ' ' << img.height << (char)0xA << img.depth << (char)0xA;
     const int dataSize = img.width * img.height * 3;
     stream.write(img.data, dataSize);

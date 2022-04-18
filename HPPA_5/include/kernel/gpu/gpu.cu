@@ -294,6 +294,127 @@ Error:
 	time = elapsedTime / 1000;
 }
 
+void _lack_of_fantazy(const image& src, image& dst, cudaStream_t stream)
+{
+	const unsigned __int32 full_block_height = 33;	//low dependense to excec time (less then ~6 cause unhandled misses)
+	const unsigned __int32 block_length = 2048;
+	const unsigned __int32 block_length_in_int = block_length / 4;
+	dst.magic = src.magic;
+	dst.depth = src.depth;
+	dst.height = src.height;
+	dst.width = src.width;
+	dst.data = new char[dst.height * dst.width * 3];
+	const unsigned __int32 length_in_byte = src.width * 3;
+	const unsigned __int32 warps_per_block = 8;
+	const unsigned __int32 threads_per_block = WARP_SIZE * warps_per_block;
+	const unsigned __int32 blocks_per_raw = (length_in_byte + block_length - 1) / block_length;
+	const unsigned __int32 blocks_per_column = (src.height + full_block_height - 1) / full_block_height;
+	const unsigned __int32 last_block_height = src.height % full_block_height == 0 ? full_block_height : src.height % full_block_height;
+	const unsigned __int32 iterations_per_thread = block_length / 4 / threads_per_block;
+	const unsigned __int32 shared_alloc_size = 6 * (block_length + 128);
+	const unsigned int aligne_length = blocks_per_raw * block_length;
+	const unsigned __int32 aligne_length_in_int = aligne_length / 4;
+	const unsigned __int32 last_pixel_index = length_in_byte % block_length == 0 ? block_length : length_in_byte % block_length;
+	const unsigned __int32 c_pivot_iterations_per_thread = block_length_in_int / 3 / threads_per_block;
+	unsigned __int8* cuda_src, * cuda_dst;
+	cudaError_t cudaStatus;
+
+	cudaEvent_t start, stop;
+
+	cudaStatus = cudaMallocAsync((void**)&cuda_dst, aligne_length * dst.height, stream);
+	if (cudaStatus != cudaSuccess) {
+		fprintf(stderr, "cudaMalloc failed!");
+		goto Error;
+	}
+
+	cudaStatus = cudaMallocAsync((void**)&cuda_src, aligne_length * src.height, stream);
+	if (cudaStatus != cudaSuccess) {
+		fprintf(stderr, "cudaMalloc failed!");
+		goto Error;
+	}
+
+	cudaStatus = cudaMemcpy2DAsync((void*)cuda_src, aligne_length, (const void*)src.data, length_in_byte, length_in_byte, src.height, cudaMemcpyHostToDevice, stream);
+	if (cudaStatus != cudaSuccess) {
+		fprintf(stderr, "cudaMemcpy failed!");
+		goto Error;
+	}
+
+
+
+	cudaStatus | cudaMemcpyToSymbolAsync(FULL_BLOCK_HEIGHT, &full_block_height, sizeof(unsigned __int32), 0, cudaMemcpyHostToDevice, stream);		//year, that's ridiculous! but i'm done...
+	cudaStatus | cudaMemcpyToSymbolAsync(BLOCK_LENGHT_IN_INT, &block_length_in_int, sizeof(unsigned __int32), 0, cudaMemcpyHostToDevice, stream);
+	cudaStatus | cudaMemcpyToSymbolAsync(BLOCK_LENGHT, &block_length, sizeof(unsigned __int32), 0, cudaMemcpyHostToDevice, stream);
+	cudaStatus | cudaMemcpyToSymbolAsync(SRC_PITCH_IN_INT, &aligne_length_in_int, sizeof(unsigned __int32), 0, cudaMemcpyHostToDevice, stream);
+	cudaStatus | cudaMemcpyToSymbolAsync(ITERATIONS_PER_THREAD, &iterations_per_thread, sizeof(unsigned __int32), 0, cudaMemcpyHostToDevice, stream);
+	cudaStatus | cudaMemcpyToSymbolAsync(LAST_BLOCK_HEIGHT, &last_block_height, sizeof(unsigned __int32), 0, cudaMemcpyHostToDevice, stream);
+	cudaStatus | cudaMemcpyToSymbolAsync(SRC_HEIGHT, &src.height, sizeof(unsigned __int32), 0, cudaMemcpyHostToDevice, stream);
+	cudaStatus | cudaMemcpyToSymbolAsync(SRC_WIDTH, &length_in_byte, sizeof(unsigned __int32), 0, cudaMemcpyHostToDevice, stream);
+	cudaStatus | cudaMemcpyToSymbolAsync(LAST_PIXEL_INDEX, &last_pixel_index, sizeof(unsigned __int32), 0, cudaMemcpyHostToDevice, stream);
+	if (cudaStatus != cudaSuccess) {
+		fprintf(stderr, "cudaMemcpyToSymbol failed!");
+		goto Error;
+	}
+
+	dim3 blockDim(threads_per_block);
+	dim3 gridDim(blocks_per_raw, blocks_per_column);
+
+	
+	c_debugKernel << <gridDim, blockDim, shared_alloc_size, stream >> > ((const unsigned int*)cuda_src, (unsigned int*)cuda_dst);
+
+	cudaStatus = cudaMemcpy2DAsync((void*)dst.data, length_in_byte, (const void*)cuda_dst, aligne_length, length_in_byte, dst.height, cudaMemcpyDeviceToHost, stream);
+	if (cudaStatus != cudaSuccess) {
+		fprintf(stderr, "cudaMemcpy failed!");
+		goto Error;
+	}
+
+Error:
+	fprintf(stderr, cudaGetErrorString(cudaStatus));
+	cudaFreeAsync(cuda_dst, stream);
+	cudaFreeAsync(cuda_src, stream);
+}
+
+void cudaHanglerMultipleData(const image*  src, image* dst, const unsigned int length)
+{
+	cudaStream_t* streams = new cudaStream_t[5];
+	cudaError_t cudaStatus;
+
+	cudaStatus = cudaSetDevice(DEVICE_ID);
+	if (cudaStatus != cudaSuccess) {
+		fprintf(stderr, "cudaSetDevice failed!  Do you have a CUDA-capable GPU installed?");
+		goto Error;
+	}
+
+	for (int counter = 0; counter < 5; counter++) {
+		cudaStatus = cudaStreamCreate(streams + counter);
+		if (cudaStatus != cudaSuccess) {
+			fprintf(stderr, "cudaStreamCreate failed!");
+			goto Error;
+		}
+	}
+	for (int image_index = 0; image_index < length;) {
+		for (int counter_1 = 0; counter_1 < 5; counter_1 ++) {
+			if (cudaStreamQuery(streams[counter_1]) == cudaSuccess &&image_index<length) {
+				_lack_of_fantazy(src[image_index], dst[image_index], streams[counter_1]);
+				++image_index;
+			}
+		}
+	}
+	for (int counter = 0; counter < 5; counter++) {
+		cudaStreamSynchronize(streams[counter]);
+	}
+
+	for (int counter = 0; counter < 5; counter++) {
+		cudaStatus = cudaStreamDestroy(streams[counter]);
+		if (cudaStatus != cudaSuccess) {
+			fprintf(stderr, "cudaStreamCreate failed!");
+			goto Error;
+		}
+	}
+	delete[] streams;
+Error:
+	fprintf(stderr, (std::string(cudaGetErrorString(cudaStatus)) + std::string("\n")).c_str());
+}
+
 
 
 inline __global__ void _debugKernel(const unsigned __int32* src, unsigned __int32* dst) {

@@ -71,6 +71,7 @@
       <AdditionalIncludeDirectories>$(ProjectDir)include\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
+      <OpenMPSupport>true</OpenMPSupport>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -88,6 +89,7 @@
     <CudaCompile Include="include\kernel\gpu\gpu.cu" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="include\handler\cpu\opm\ppmOpmHandler.h" />
     <ClInclude Include="include\util\comparator\Comparator.h" />
     <ClInclude Include="include\handler\cpu\CpuHandler.h" />
     <ClInclude Include="include\entity\image.h" />
@@ -99,8 +101,14 @@
     <ClInclude Include="include\util\padder\Padder.h" />
     <ClInclude Include="include\util\timer\Timer.h" />
     <ClInclude Include="include\util\loader\impl\ppmLoader\ppmLoader.h" />
+    <ClInclude Include="include\lab\5\Lab5.h" />
+    <ClInclude Include="include\lab\6\Lab6.h" />
+    <ClInclude Include="include\util\generator\pgm\pgmGenerator.h" />
+    <ClInclude Include="include\util\generator\ppm\ppmGenerator.h" />
+    <ClInclude Include="include\lab\7\Lab7.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="include\handler\cpu\opm\ppmOmpHandler.cpp" />
     <ClCompile Include="include\util\comparator\Comparator.cpp" />
     <ClCompile Include="include\handler\cpu\CpuHandler.cpp" />
     <ClCompile Include="include\handler\cpu\rgb\CpuRGBHandler.cpp" />
@@ -109,6 +117,11 @@
     <ClCompile Include="include\util\padder\Padder.cpp" />
     <ClCompile Include="include\util\timer\Timer.cpp" />
     <ClCompile Include="include\util\loader\impl\ppmLoader\ppmLoader.cpp" />
+    <ClCompile Include="include\lab\5\Lab5.cpp" />
+    <ClCompile Include="include\lab\6\Lab6.cpp" />
+    <ClCompile Include="include\util\generator\pgm\pgmGenerator.cpp" />
+    <ClCompile Include="include\util\generator\ppm\ppmGenerator.cpp" />
+    <ClCompile Include="include\lab\7\Lab7.cpp" />
     <ClCompile Include="src\Source.cpp" />
   </ItemGroup>
   <ItemGroup>
