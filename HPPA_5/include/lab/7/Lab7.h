@@ -8,6 +8,7 @@ public:
 	static void gpu(const std::string&);
 
 	static void cpu(const std::string&);
-private:
+//private:
+//	static void mpi_cpu(const std::string&);
 };
 

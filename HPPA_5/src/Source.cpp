@@ -21,9 +21,9 @@ int main(void) {
 	/*Lab5::test(3001, 4001, path_grey_store, name_noise_grey);
 	Lab5::prod(path_grey_load, path_grey_store, name_grey);*/
 	//Lab6::test(3001, 4001, path_color_store, name_noise_color);
-	//Lab6::prod(path_color_load, path_color_store, name_color);
-	Lab7::gpu(path_array_store);
-	Lab7::cpu(path_array_store);
+	Lab6::prod(path_color_load, path_color_store, name_color);
+	//Lab7::gpu(path_array_store);
+	//Lab7::cpu(path_array_store);
 	return 0;
 }
 //

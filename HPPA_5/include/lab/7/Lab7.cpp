@@ -7,6 +7,7 @@
 #include <handler/cpu/rgb/CpuRGBHandler.h>
 #include <iostream>
 #include <util/timer/Timer.h>
+#include <mpi.h>
 
 
 const unsigned int size = 10;
@@ -71,3 +72,36 @@ void Lab7::cpu(const std::string& path)
 	delete[] images, result_images;
 	std::cout << "lab7: cpu omp fineshed in " << time << " s." << std::endl << std::endl;
 }
+
+//void Lab7::mpi_cpu(const std::string& path)
+//{
+//	Timer timer;
+//	ppmLoader loader;
+//	image* images = new image[size];
+//	image* result_images = new image[size];
+//	timer.start();
+//	std::cout << "lab7: cpu omp started." << std::endl << std::endl;
+//	if (MPI_Init(null, null) !=0) {
+//		std::cout << "lab7: MPI initialization fault." << std::endl << std::endl;
+//		return;
+//	}
+//	int MPI_rank, MPI_size;
+//	
+//	MPI_Comm_rank(MPI_COMM_WORLD, &MPI_rank);
+//	MPI_Comm_size(MPI_COMM_WORLD, &MPI_size);
+//
+//	for (int counter = 0; counter < size; counter++) {
+//		loader.download(images[counter], "D:/Projects/VSProjects/HPPA_5/x64/Release/color/big.ppm");
+//	}
+//	for (int counter = 0; counter < size; counter++) {
+//		double time;
+//		CpuRGBHandler::handle(images[counter], result_images[counter], time);
+//	}
+//	for (int counter = 0; counter < size; counter++) {
+//		loader.upload(result_images[counter], (path + std::to_string(counter) + std::string("_cpu") + std::string(".ppm")).c_str());
+//		delete[] images[counter].data, result_images[counter].data;
+//	}
+//	double time = timer.check();
+//	delete[] images, result_images;
+//	std::cout << "lab7: cpu omp fineshed in " << time << " s." << std::endl << std::endl;
+//}
